@@ -50,24 +50,5 @@ generateButton = Button(root, text="generate next", command=generateNextToken)
 generateButton.grid(row=4, column=0)
 
 
-# frame that deals with uploading files START --------------------------------------------------------
-fileUploadFrame = Frame(root)
-fileUploadFrame.grid(row=0, column=1)
-
-# text for entering name of file to be uploaded, with label explaining that
-enterFileLabel = Label(fileUploadFrame, text="Enter file name")
-enterFileLabel.grid(row=0, column=1)
-fileNameText = Text(fileUploadFrame, height=2, width=25)
-fileNameText.grid(row=1, column=1)
-
-# button for upload text file for data in the n-gram model
-addFileButton = Button(fileUploadFrame, text="upload to model")
-addFileButton.grid(row=2, column=1)
-
-# message to tell if successful uploaded
-uploadMessageLabel = Label(fileUploadFrame)
-uploadMessageLabel.grid(row=3, column=1)
-# frame that deals with uploading files END ----------------------------------------------------------
-
 
 root.mainloop()
