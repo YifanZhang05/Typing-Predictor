@@ -1,0 +1,6 @@
+hello .  
+test   white space   
+punctuation: !, .  /? # @!$%^& *( )
+periods: .a. ..a  . a .
+"don't worry about numbers:1.2.345 6. 75"
+i I "Remove cApItAliZe"
