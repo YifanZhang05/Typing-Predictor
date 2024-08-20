@@ -23,7 +23,7 @@ nextTokenLabel.grid(row=3, column=0)
 words2 = ["the", "child", "will", "the", "child", "can", "the",
 							"child", "will", "the", "child", "may", "go", "home", "."]
 #model = build_ngram_model(words2, n, k)
-model = build_ngram_model(parse_file("file.txt"), n, k)
+model = build_ngram_model(parse_file("file.txt"), n)
 
 # function used to generate & display predicted next words using the ngram model build previously
 # called when generateButton is clicked
@@ -49,6 +49,25 @@ def generateNextToken():
 generateButton = Button(root, text="generate next", command=generateNextToken)
 generateButton.grid(row=4, column=0)
 
+## Input box for uploading file to the word predicting model
+# frame that deals with uploading files START --------------------------------------------------------
+fileUploadFrame = Frame(root)
+fileUploadFrame.grid(row=0, column=1)
+
+# text for entering name of file to be uploaded, with label explaining that
+enterFileLabel = Label(fileUploadFrame, text="Enter file name")
+enterFileLabel.grid(row=0, column=1)
+fileNameText = Text(fileUploadFrame, height=2, width=25)
+fileNameText.grid(row=1, column=1)
+
+# button for upload text file for data in the n-gram model
+addFileButton = Button(fileUploadFrame, text="upload to model")
+addFileButton.grid(row=2, column=1)
+
+# message to tell if successful uploaded
+uploadMessageLabel = Label(fileUploadFrame)
+uploadMessageLabel.grid(row=3, column=1)
+# frame that deals with uploading files END ----------------------------------------------------------
 
 
 root.mainloop()

@@ -2,6 +2,9 @@
 
 from utilities import *
 
+# the file storing the overall n-gram model is "_n_model.txt"
+OVERALL_MODEL_FILE_SUFFIX = "model.txt"
+
 # Returns an ordered list of words with bad characters processed (removed) from the text in the file given by file_name.
 # clean up the text data base
 def parse_file(filename : str) -> list:
@@ -106,33 +109,19 @@ def build_ngram_counts(words, n):
 # return n-gram dictionary. counts: dict, prune_len: int
 # for each n-gram, only keep the first prune_len most frequent following words
 # when there's a tie, keep all words in the tie
-def prune_ngram_counts(counts, prune_len):
+def prune_ngram_counts(counts):
     new_dict = {}
     for key, value in counts.items():
         value_converted = convert_counts_format(value) # convert format of value into list of s[word, frequency] pairs
         value_converted.sort(key=lambda pair: pair[1], reverse=True) # sort the list of [word, frequency] pairs based on frequency of words
         words = []
         frequency = []
-        if (len(value[0]) > prune_len): # if the n-gram has more than prune_len following words
-            for i in range(prune_len):
-                element = value_converted[i]
-                words.append(element[0])
-                frequency.append(element[1])
-            min_freq = frequency[-1] # minimum of frequency kept
-            next_index = prune_len
-            #print(key, value_converted, min_freq)
-            while(next_index<len(value[0]) and value_converted[next_index][1]==min_freq): # loop as long as there's the tie
-                words.append(value_converted[next_index][0])
-                frequency.append(value_converted[next_index][1])
-                next_index += 1
-            new_dict[key] = [words, frequency]
-        else: # otherwise, only sort by most frequent to least frequent
-            #new_dict[key] = value
-            for i in range(len(value[0])):
-                element = value_converted[i]
-                words.append(element[0])
-                frequency.append(element[1])
-            new_dict[key] = [words, frequency]
+        #sort by most frequent to least frequent
+        for i in range(len(value[0])):
+            element = value_converted[i]
+            words.append(element[0])
+            frequency.append(element[1])
+        new_dict[key] = [words, frequency]
     return new_dict
 # helper function for prune_ngram_counts()
 # convert [[a, b, c, d], [1, 2, 3, 4]] to [[a, 1], [b, 2], [c, 3], [d, 4]]
@@ -161,24 +150,20 @@ def probify_ngram_counts(counts):
 
 # build the n-gram model from list of words after parse_file. 
 # for each n-gram, only keep the top k most likely words
-def build_ngram_model(words, n, k):
+def build_ngram_model(words, n: int):
     ngram = build_ngram_counts(words, n)
-    model = prune_ngram_counts(ngram, k)
+    model = prune_ngram_counts(ngram)
     model_probify = probify_ngram_counts(model)
     return model_probify
 
-# write given n-gram model to file, return name of the file
+# write given n-gram model (for each tuple of n words, FREQUENCY of next word) to file, return name of the file
 # file named as this:
-# - raw n-gram model: raw_n_model.txt
-# - not raw n-gram model: n_model.txt
-# line1: n-gram; line2: list of next words; line3: list of freq/prob
-# raw=True: write raw model: list in value contains frequency of all words
-# raw=False: regular model: list contains limited number of probabilities
-def write_model(model: dict, n: int, raw: bool) -> str:
-    if (raw):
-        file = open("raw_"+str(n)+"_model.txt", "w") # create the file
-    else:
-        file = open(str(n)+"_model.txt", "w") # create the file
+# - _n_model.txt: store overall model
+# - _n_filename.txt: store model for filename.txt
+# line1: n-gram; line2: list of next words; line3: list of freq
+# list in value contains frequency of all words
+def write_model(model: dict, n: int, filename=OVERALL_MODEL_FILE_SUFFIX) -> str:
+    file = open("_"+str(n)+"_"+filename, "w") # create the file
     for key, value in model.items():
         for i in range(n):
             file.write(key[i])
@@ -195,9 +180,9 @@ def write_model(model: dict, n: int, raw: bool) -> str:
     file.close()
     return file.name
 
-# read n-gram model from file, return the model
-# raw=True: the model on file contains freq of all possible words instead of probability of some most likely words
-def read_model(filename: str, raw: bool) -> dict:
+# read n-gram model from file, return the model containing frequency
+# filename is the model file created by write_model()
+def read_model_freq(filename: str) -> dict:
     file = open(filename, "r")
     model = {}
     count = 0 # 0: reading n-gram; 1: reading next words; 2: reading freq/probabilities
@@ -214,18 +199,22 @@ def read_model(filename: str, raw: bool) -> dict:
             model[ngram].append(line.split())
             count += 1
         elif (count == 2):
-            # read freq (raw) or probabilities (not raw)
-            if (raw): 
-                model[ngram].append([int(x) for x in line.split()])
-            else:
-                model[ngram].append([float(x) for x in line.split()])
+            model[ngram].append([int(x) for x in line.split()])
             count = 0
     file.close()
     return model
 
-# update both the raw model and model file based on a given text file
-# only update if the file with the given name hasn't been added to the model
-def update_model(raw_model_file: str, model_file: str, text_file: str) -> dict:
+
+# remove the n-gram data in text_file from the overall n-gram model (for all n)
+def remove_file_from_model(text_file: str):
+    # loop through all files 
+    return
+
+
+# update or add file to the n-gram model database
+# update/create the row n-gram model file called _n_filename.txt, based on the given file's text data
+# then update the overall n-gram model file
+def update_or_add_file_model(text_file: str, n: int):
     all_model_files = open("all_model_files.txt", "r+") # file containing name of all files added in model
     file_lst = []  # list of all model file names; same data as all_model_files but as a list
     for line in all_model_files:
@@ -235,22 +224,19 @@ def update_model(raw_model_file: str, model_file: str, text_file: str) -> dict:
 
     # check if file already added to model (i.e. text_file in the list of all_model_files)
     for file in file_lst:
-        if (file == text_file):
+        if (file == text_file):    # if found in all_model_files
             print("File already added to the model")
             return
-
-    # read given raw model file as dict (call it raw_model), get n value from file name
-
-    # convert given text file into raw ngram model, call it text_file_raw_model
-
-    # loop through text_file_raw_model and add data to raw_model
-
-    # prune and probify the updated raw_model. This will be updated model
-
-    # write updated raw_model and model to raw_model_file and model_file
+        
+    # if not found in all_model_files
+    print("File not in model")
+    all_model_files.write(text_file+"\n")
+    model = build_ngram_counts(parse_file(text_file), n)
+    write_model(model, n, text_file)
 
     all_model_files.close()
     return
+
 
 # given the ngram model (dict) and a ngram (tuple). Return a list predict_words:
 # - predict_words[0]: a list of predicted words after the given ngram according to the model. Ordered most likely to least likely
