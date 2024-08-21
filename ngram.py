@@ -1,9 +1,7 @@
 # the n-gram model: predict the next word in a text based on the previous n words
 
 from utilities import *
-
-# the file storing the overall n-gram model is "_n_model.txt"
-OVERALL_MODEL_FILE_SUFFIX = "model.txt"
+from pathlib import Path
 
 # Returns an ordered list of words with bad characters processed (removed) from the text in the file given by file_name.
 # clean up the text data base
@@ -150,71 +148,53 @@ def probify_ngram_counts(counts):
 
 # build the n-gram model from list of words after parse_file. 
 # for each n-gram, only keep the top k most likely words
-def build_ngram_model(words, n: int):
+def build_ngram_model(words: list, n: int):
     ngram = build_ngram_counts(words, n)
     model = prune_ngram_counts(ngram)
     model_probify = probify_ngram_counts(model)
     return model_probify
 
-# write given n-gram model (for each tuple of n words, FREQUENCY of next word) to file, return name of the file
-# file named as this:
-# - _n_model.txt: store overall model
-# - _n_filename.txt: store model for filename.txt
-# line1: n-gram; line2: list of next words; line3: list of freq
-# list in value contains frequency of all words
-def write_model(model: dict, n: int, filename=OVERALL_MODEL_FILE_SUFFIX) -> str:
-    file = open("_"+str(n)+"_"+filename, "w") # create the file
-    for key, value in model.items():
-        for i in range(n):
-            file.write(key[i])
-            file.write(" ")
-        file.write("\n")
-        for i in range(len(value[0])): # write list of next words
-            file.write(value[0][i])
-            file.write(" ")
-        file.write("\n")
-        for i in range(len(value[0])): # write list of freq/prob
-            file.write(str(value[1][i]))
-            file.write(" ")
-        file.write("\n")
-    file.close()
-    return file.name
 
-# read n-gram model from file, return the model containing frequency
-# filename is the model file created by write_model()
-def read_model_freq(filename: str) -> dict:
-    file = open(filename, "r")
-    model = {}
-    count = 0 # 0: reading n-gram; 1: reading next words; 2: reading freq/probabilities
-    ngram = tuple
-    for line in file: # read file line by line
-        #print(line)
-        if (count == 0):
-            # read n-gram
-            ngram = tuple(line.split())
-            count += 1
-        elif (count == 1):
-            # read words
-            model[ngram] = []
-            model[ngram].append(line.split())
-            count += 1
-        elif (count == 2):
-            model[ngram].append([int(x) for x in line.split()])
-            count = 0
-    file.close()
-    return model
+# call build_ngram_model for all files in "all_model_files.txt", put the models together
+def build_all_ngram_model(n: int) -> dict:
+    # idea: create a temp file/words list that combines everything, then call build_ngram_model on that
+    all_model_files = open("all_model_files.txt", "r+") # file containing name of all files added in model
+    words_lst = []
+    for line in all_model_files:
+        if (line[-1] == "\n"):
+            line = line[:-1]
+            words_lst += (parse_file(line))
 
+    all_model_files.close()
+    return build_ngram_model(words_lst, n)
 
-# remove the n-gram data in text_file from the overall n-gram model (for all n)
+# remove text_file from "all_model_files.txt"
 def remove_file_from_model(text_file: str):
-    # loop through all files 
+    all_model_files = open("all_model_files.txt", "r+") # file containing name of all files added in model
+    file_lst = []  # list of all model file names; same data as all_model_files but as a list
+    for line in all_model_files:
+        if (line[-1] == "\n"):
+            line = line[:-1]
+        file_lst.append(line)
+
+    # first clear all_model_files.txt, then write everything to all_model_files.txt except for text_file
+    all_model_files.seek(0)
+    all_model_files.truncate(0)
+    for file in file_lst:
+        if (file != text_file): 
+            all_model_files.write(file+"\n")
+    all_model_files.close()
     return
 
 
-# update or add file to the n-gram model database
-# update/create the row n-gram model file called _n_filename.txt, based on the given file's text data
-# then update the overall n-gram model file
-def update_or_add_file_model(text_file: str, n: int):
+# add file to the n-gram model database
+# return bool to indicate success or not (success iff file exist)
+def add_file_to_model(text_file: str) -> bool:
+    # check if file exists
+    if (not Path(text_file).is_file()):
+        print("File not exist: " + text_file)
+        return False
+
     all_model_files = open("all_model_files.txt", "r+") # file containing name of all files added in model
     file_lst = []  # list of all model file names; same data as all_model_files but as a list
     for line in all_model_files:
@@ -226,16 +206,14 @@ def update_or_add_file_model(text_file: str, n: int):
     for file in file_lst:
         if (file == text_file):    # if found in all_model_files
             print("File already added to the model")
-            return
+            return True
         
-    # if not found in all_model_files
+    # if not found in all_model_files, add it
     print("File not in model")
     all_model_files.write(text_file+"\n")
-    model = build_ngram_counts(parse_file(text_file), n)
-    write_model(model, n, text_file)
 
     all_model_files.close()
-    return
+    return True
 
 
 # given the ngram model (dict) and a ngram (tuple). Return a list predict_words:
