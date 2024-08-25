@@ -11,6 +11,7 @@ class TkinterGUI:
         self.root = Tk()    # create the window
         self.create_gui_predict_area()
         self.create_gui_file_upload_frame()
+        self.create_gui_set_parameter_frame()
         self.root.mainloop()
 
     # create text field for entering text, label widget that display prediction, and button to generate prediction
@@ -74,12 +75,48 @@ class TkinterGUI:
 
         # label that display the last file uploaded
         uploadedFileLabel = Label(fileUploadFrame, text="")
-        uploadedFileLabel.grid(row=4, column=1)
+        uploadedFileLabel.grid(row=3, column=1)
 
         # button for upload text file for data in the n-gram model
         addFileButton = Button(fileUploadFrame, text="update model", command=addFileButtonCommand)
         addFileButton.grid(row=2, column=1)
 
-        # message to tell if successful uploaded
-        uploadMessageLabel = Label(fileUploadFrame)
-        uploadMessageLabel.grid(row=3, column=1)
+    # create frame contain tools to set parameters like n and number of prediction displayed
+    def create_gui_set_parameter_frame(self) -> None:
+        #change n value and regenerate the model to match it
+        def changeNCommand():
+            newNStr = changeNText.get()
+            if (newNStr.isdigit()):
+                self.model.n = int(newNStr)
+                self.model.update_model()
+                changeNLabel.config(text="change n value (currently " + str(self.model.n) + ")")
+            return
+        #change number of prediction displayed
+        def changePredictNumCommand():
+            newNStr = changePredictNumText.get()
+            if (newNStr.isdigit()):
+                self.displayNum = int(newNStr)
+                changePredictNumLabel.config(text="change # of predictions (currently "+str(self.displayNum)+")")
+            return
+
+        setParamFrame = Frame(self.root)
+        setParamFrame.grid(row=1, column=1)
+
+        # change n value
+        changeNLabel = Label(setParamFrame, text="change n value (currently " + str(self.model.n) + ")")
+        changeNLabel.grid(row=0, column=0)
+        changeNText = Entry(setParamFrame, width=5)
+        changeNText.grid(row=1, column=0)
+        changeNButton = Button(setParamFrame, text="confirm", command=changeNCommand)
+        changeNButton.grid(row=2, column=0)
+
+        space = Label(setParamFrame, text="")
+        space.grid(row=3, column=0)
+
+        # change number of prediction displayed
+        changePredictNumLabel = Label(setParamFrame, text="change # of predictions (currently "+str(self.displayNum)+")")
+        changePredictNumLabel.grid(row=4, column=0)
+        changePredictNumText = Entry(setParamFrame, width=5)
+        changePredictNumText.grid(row=5, column=0)
+        changePredictNumButton = Button(setParamFrame, text="confirm", command=changePredictNumCommand)
+        changePredictNumButton.grid(row=6, column=0)
