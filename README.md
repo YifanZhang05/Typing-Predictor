@@ -1,4 +1,4 @@
-About word predictor
+**About word predictor**
 
 Based on the last n entered words, use the text in file.txt to predict the next word. 
 Can modify n value (initially 2) and number of predictions displayed (initially 3)
