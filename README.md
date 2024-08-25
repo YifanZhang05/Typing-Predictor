@@ -1,6 +1,7 @@
 About word predictor
 
-Based on the last n entered words, use the text in file.txt to predict the next word. Initially n=2 (current can't change n value in GUI)
+Based on the last n entered words, use the text in file.txt to predict the next word. 
+Can modify n value (initially 2) and number of predictions displayed (initially 3)
 
 How to use:
   - Put sample text file in file.txt. Word prediction will be based on text in this file
