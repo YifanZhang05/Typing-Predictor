@@ -1,5 +1,6 @@
 from fileNgramModel import *
 from tkinter import *
+from tkinter import scrolledtext
 
 class TkinterGUI:
     def __init__(self, displayNum: int, model: FileNgramModel) -> None:
@@ -31,25 +32,29 @@ class TkinterGUI:
                     freq = predictWordsList[1][i]
                     wordsListStr += "[" + word + ": " + "{:.2f}".format(freq) + "]"
 
-            nextTokenLabel.config(text=wordsListStr)
+            nextTokenLabel.config(textvariable=StringVar(value=wordsListStr))
             return
         
         # create text field
-        textField = Text(self.root, width=50)
+        textField = scrolledtext.ScrolledText(self.root, width=50)
         textField.grid(row=0, column=0, rowspan=3)
 
         # text label widget for displaying predicted next words
-        nextTokenLabel = Label(self.root, text="no prediction found in model")
-        nextTokenLabel.grid(row=3, column=0)
+        nextTokenLabel = Entry(self.root, textvariable=StringVar(value="no prediction found in model"), state='readonly', justify='center')
+        nextTokenLabel.grid(row=3, column=0, sticky='ew')
+        # scroll bar for nextTokenLabel
+        nextTokenLabelScroll = Scrollbar(self.root, orient='horizontal', command=nextTokenLabel.xview)
+        nextTokenLabel.config(xscrollcommand=nextTokenLabelScroll.set)
+        nextTokenLabelScroll.grid(row=4, column=0, sticky='ew')
 
         # create generate button
         generateButton = Button(self.root, text="generate next", command=generateButtonCommand)
-        generateButton.grid(row=4, column=0)
+        generateButton.grid(row=5, column=0)
 
     # create file upload frame that contains the following:
     def create_gui_file_upload_frame(self) -> None:
         def addFileButtonCommand():
-            file = fileNameText.get("1.0", "end-1c")
+            file = fileNameText.get()
             fileAdded = self.model.add_file_to_model(file)
             self.model.update_model()
             if (fileAdded):
@@ -64,7 +69,7 @@ class TkinterGUI:
         # text for entering name of file to be uploaded, with label explaining that
         enterFileLabel = Label(fileUploadFrame, text="Enter file name")
         enterFileLabel.grid(row=0, column=1)
-        fileNameText = Text(fileUploadFrame, height=2, width=25)
+        fileNameText = Entry(fileUploadFrame, width=25)
         fileNameText.grid(row=1, column=1)
 
         # label that display the last file uploaded
