@@ -4,8 +4,8 @@ Based on the last n entered words, use the text in file.txt to predict the next 
 Can modify n value (initially 2) and number of predictions displayed (initially 3)
 
 How to use:
-  - Put sample text file in file.txt. Word prediction will be based on text in this file
   - Run main.py. You will see a GUI with a textbox and a button that says "generate text"
+  - upload text files that you want to use for the generation into the text database (see below for details)
   - Enter some words and click "generate text". You will see a list of predicted next word and the possibility for each of them.
 
 How to update text database
